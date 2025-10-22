@@ -1,11 +1,13 @@
 import bcrypt from "bcrypt"
 import User from "../models/auth.models.js"
 import jwt from "jsonwebtoken"
+
 export const register=async(req,res)=>{
 
     const {name,email,password,role}=req.body
     
-    if(!name || !email || !password || !role){
+    
+    if(!name || !email || !password ){
         return res.status(400).json({
             success:false,
             message:"All fields are required"})
@@ -20,18 +22,24 @@ export const register=async(req,res)=>{
         const salt=await bcrypt.genSalt(10)
         const hashPassword=await bcrypt.hash(password,salt)
 
-        const token=jwt.sign({id:_id},process.env.JWT_SECRET,{expiresIn:"1d"})
-        res.cookie("token",token,{httpOnly:true,secure:true,sameSite:"none"})
+       
         
-        const user= User.create({name,email,password:hashPassword,role})
+        const user= await User.create({name,email,password:hashPassword,role})
         if(!user){
             return res.status(400).json({
                 success:false,
                 message:"User not created"})
         }
+         const token=jwt.sign({id:user._id},process.env.JWT_SECRET,{expiresIn:"1d"})
+        res.cookie("token",token,{httpOnly:true,secure:true,sameSite:"none"})
         res.status(201).json({
             success:true,
-            message:"User created successfully",user})
+            message:"User created successfully",
+            User:{name:user.name,
+            role:user.role,
+            email:user.email
+        }
+        })
         
     } catch (error) {
         console.log(error)
@@ -42,6 +50,7 @@ export const register=async(req,res)=>{
 
 }
 export const login=async(req,res)=>{
+
     const {email,password}=req.body
     if(!email || !password){
         return res.status(400).json({
@@ -74,5 +83,26 @@ export const login=async(req,res)=>{
     }
 
 }
-export const logout=async(req,res)=>{}
+export const logout=async(req,res)=>{
+    const token=req.cookies.token;
+    console.log(token)
+    if(!token){
+        return res.status(401).json({
+            success:false,
+            message:"Unauthorized"})
+    }
+    try{
+    res.clearCookie("token")
+    res.status(200).json({
+        success:true,
+        message:"User logged out successfully"})
+    }
+    catch(error){
+        console.log(error)
+        res.status(500).json({success:false,
+            message:"Something went wrong"})  
+        
+    }
+    
+}
 export const profile=async(req,res)=>{}
