@@ -8,6 +8,8 @@ const authMiddleware = (req, res, next) => {
                 message:"Unauthorized"})
         }
         const decoded=jwt.verify(token,process.env.JWT_SECRET)
+        // console.log(decoded)
+        //decoded has id stored in it
         if(!decoded){
             return res.status(401).json({
                 success:false,

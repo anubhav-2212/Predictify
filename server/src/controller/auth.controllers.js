@@ -105,4 +105,30 @@ export const logout=async(req,res)=>{
     }
     
 }
-export const profile=async(req,res)=>{}
+export const profile=async(req,res)=>{
+    const {id}=req.user
+    console.log(id)
+    try {
+        const user=await User.findById(id)
+    if(!user){
+        return res.status(400).json({
+            success:false,
+            message:"User not found"})
+    }
+    res.status(200).json({
+        success:true,
+        message:"User found successfully",
+        User:{name:user.name,
+        role:user.role,
+        email:user.email
+    }
+    })
+        
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({success:false,
+            message:"Something went wrong"})
+        
+    }
+    
+}
